@@ -60,7 +60,7 @@ class Catchpoint(object):
         self._debug("Making auth request...")
         try:
             r = requests.post(uri, data=payload)
-        except requests.ConnectionError, e:
+        except requests.ConnectionError as e:
             self._connection_error(e)
 
         self._debug("URL: " + r.url)
@@ -81,7 +81,7 @@ class Catchpoint(object):
         self._debug("Making request...")
         headers = {
             'Accept': self.content_type,
-            'Authorization': "Bearer " + base64.b64encode(self._token)
+            'Authorization': "Bearer %s" % base64.b64encode(self._token.encode('UTF-8')).decode('UTF-8')
         }
         try:
             if method == 'get':
@@ -100,14 +100,14 @@ class Catchpoint(object):
                 )
             if r.status_code != 200:
                 raise CatchpointError(r.status_code, r.content)
-        except requests.ConnectionError, e:
+        except requests.ConnectionError as e:
             self._connection_error(e)
 
         self._debug("URL: " + r.url)
         try:
             r_data = r.json()
             self._expired_token_check(r_data)
-        except TypeError, e:
+        except TypeError as e:
             return e
         return r_data
 
