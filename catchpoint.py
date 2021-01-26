@@ -153,6 +153,29 @@ class Catchpoint(object):
 
         return startTime, endTime
 
+    def raw15(self, creds, testIDs, startTime=None, endTime=None):
+        """
+        Retrieve the raw performance chart data for a given test for a time period.
+        """
+        if not self._auth:
+            self._authorize(creds)
+
+        # prepare request
+        self._debug("Creating raw_chart url...")
+        uri = "https://{0}/{1}/performance/raw".format(self.host, self.api_uri)
+
+        params = {
+            'tests': ','.join(testIDs),
+        }
+
+        if startTime is not None and endTime is not None:
+            params['startTime'] = startTime
+            params['endTime'] = endTime
+
+
+        return self._make_request(uri, params=params)
+
+
     def raw(self, creds, testid, startTime, endTime, tz="UTC"):
         """
         Retrieve the raw performance chart data for a given test for a time period.
@@ -172,6 +195,31 @@ class Catchpoint(object):
         }
 
         return self._make_request(uri, params=params)
+
+    def aggregated(self, creds, testIDs, aggregationType="Minutes15", startTime=None, endTime=None, tz="UTC"):
+        """
+        Retrieve the raw performance chart data for a given test for a time period.
+        """
+        if not self._auth:
+            self._authorize(creds)
+
+        startTime, endTime = self._format_time(startTime, endTime, tz)
+
+        # prepare request
+        self._debug("Creating raw_chart url...")
+        uri = "https://{0}/{1}/performance/aggregated" \
+            .format(self.host, self.api_uri, testIDs)
+        params = {
+                'aggregationType': aggregationType,
+                'tests': ','.join(testIDs),
+        }
+        
+        if startTime is not None and endTime is not None:
+            params['startTime'] = startTime
+            params['endTime'] = endTime
+
+        return self._make_request(uri, params=params)
+
 
     def favorite_charts(self, creds):
         """
@@ -425,6 +473,39 @@ class Catchpoint(object):
 
         return self._make_request(uri, params=params)
 
+
+    def waterfall(self, creds, testId, date=None):
+        """
+        retrieve the waterfall intervals for the current hour
+        """
+        if not self._auth:
+            self._authorize(creds)
+
+        self._debug("Creating waterfall url...")
+
+        if date:
+            uri = "https://{0}/{1}/waterfall/intervals/{2}?date={3}" \
+                .format(self.host, self.api_uri, testId, date)
+        else:
+            uri = "https://{0}/{1}/waterfall/intervals/{2}" \
+                .format(self.host, self.api_uri, testId)
+
+        return self._make_request(uri)
+
+    def waterfall_data(self, creds, waterfallToken):
+        """
+        retrieve the waterfall for a given interval
+        """
+        if not self._auth:
+            self._authorize(creds)
+
+        self._debug("Creating waterfall url...")
+
+        uri = "https://{0}/{1}/waterfall/{2}/data".format(self.host, self.api_uri, waterfallToken)
+
+        return self._make_request(uri)
+
+
     def test(self, creds, test):
         """
         Retrieve a given test for the API consumer.
@@ -433,8 +514,7 @@ class Catchpoint(object):
             self._authorize(creds)
 
         self._debug("Creating test url...")
-        uri = "https://{0}/{1}/tests/{2}/allSections" \
-            .format(self.host, self.api_uri, test)
+        uri = "https://{0}/{1}/tests/{2}/allSections".format(self.host, self.api_uri, test)
 
         return self._make_request(uri)
 
